@@ -5,4 +5,6 @@ from .w3a16.gptq import *
 from .fp6.deepseed import *
 from .quant import *
 from .fp8 import *
+from .cutlass_w8a8 import *
+from .int8 import *
 from .w4a8.qoq import *

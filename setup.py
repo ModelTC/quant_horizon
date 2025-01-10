@@ -1,6 +1,10 @@
 from setuptools import setup
 from torch.utils.cpp_extension import CUDAExtension, BuildExtension
 
+import os
+import pathlib
+setup_dir = os.path.dirname(os.path.realpath(__file__))
+HERE = pathlib.Path(__file__).absolute().parent
 
 extra_compile_args = {
     "nvcc": [
@@ -17,10 +21,44 @@ extra_compile_args = {
     ]
 }
 
+extra_compile_args_2 = {
+   "nvcc": [
+        "-gencode", "arch=compute_80,code=sm_80",  # A100
+        "-gencode", "arch=compute_86,code=sm_86",  # 3090
+        "-gencode", "arch=compute_89,code=sm_89",  # 4090
+        "-gencode", "arch=compute_90,code=sm_90",  # H100
+        "--ptxas-options=-v",
+        "-lineinfo",
+        "-DENABLE_SCALED_MM_C3X=1",               
+        "-DENABLE_SCALED_MM_C2X=1",  
+    ],
+    "cxx": [
+        "-O3",                                   
+        "-DENABLE_SCALED_MM_C3X=1",               
+        "-DENABLE_SCALED_MM_C2X=1",       
+    ],
+}
+
+
 setup(
     name="quant_horizon",
     version="0.0.1",
     ext_modules=[
+        CUDAExtension(
+            name="cutlass_w8a8",
+            sources=[
+                "kernels/cutlass_w8a8/scaled_mm_entry.cu",
+                "kernels/include/cutlass_extensions/common.cpp",
+                "kernels/cutlass_w8a8/scaled_mm_c3x.cu",
+                "kernels/cutlass_w8a8/scaled_mm_c2x.cu",
+            ],
+            include_dirs=[
+                os.path.join(setup_dir, 'kernels/include'),
+                os.path.join(setup_dir, 'third-party/cutlass/include'),
+                os.path.join(setup_dir, 'third-party/cutlass/tools/util/include')
+            ],
+            extra_compile_args=extra_compile_args_2,
+        ),  
         CUDAExtension(
             name="marlin_cuda_quant",
             sources=[
@@ -58,6 +96,13 @@ setup(
             name="fp8_cuda",
             sources=[
                 "kernels/fp8/fp8_cuda_kernel.cu",
+            ],
+            extra_compile_args=extra_compile_args,
+        ),
+        CUDAExtension(
+            name="int8_cuda",
+            sources=[
+                "kernels/int8/int8_cuda_kernel.cu",
             ],
             extra_compile_args=extra_compile_args,
         ),

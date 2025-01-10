@@ -137,10 +137,11 @@ class BenchRegister(dict):
     def benchmark_all(self, init_params):
         for name in self.keys():
             if name in init_params:
-                try:
-                    self.benchmark(name, init_params.copy())
-                except Exception as e:
-                    logger.error(f"Kernel {name} has an error: {e}. Skip it.")
+                self.benchmark(name, init_params.copy())
+                # try:
+                #     self.benchmark(name, init_params.copy())
+                # except Exception as e:
+                #     logger.error(f"Kernel {name} has an error: {e}. Skip it.")
 
 
 class SpeedRegister(BenchRegister):
